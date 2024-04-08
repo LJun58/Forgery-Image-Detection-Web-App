@@ -12,6 +12,7 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 const pages = ["Home", "Tutorial", "About Us"];
 const settings = ["Profile", "Account", "History", "Logout"];
@@ -143,15 +144,6 @@ function ResponsiveAppBar() {
               },
             }}
           >
-            {/* {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: "white", display: "block" }}
-              >
-                {page}
-              </Button>
-            ))} */}
             <Button
               onClick={handleHomeClick} // Use the function to navigate
               sx={{ my: 2, color: "white", display: "block" }}

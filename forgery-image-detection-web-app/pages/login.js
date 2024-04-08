@@ -8,13 +8,52 @@ const LoginPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = () => {
-    // Perform login logic here
-    // You can use the email and password state variables to send a login request to your backend
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-    // Redirect to the dashboard page after successful login
-    router.push("/dashboard");
+    const userInfo = {
+      email: email,
+      password: password,
+    };
+
+    const response = await fetch("/api/user-crud", {
+      method: "POST",
+      body: JSON.stringify(userInfo),
+    });
+
+    if (response.ok) {
+      // alert("User registered successfully");
+      router.push("/");
+    } else {
+      const errCode = response.status;
+      const errMessage = await response.json();
+      alert(
+        `${response.status} - ${response.statusText} : ${errMessage.message}\nPlease try again.`
+      );
+
+      switch (errCode) {
+        case 400: {
+          router.push("/400");
+          break;
+        }
+        case 404: {
+          router.push("/404");
+          break;
+        }
+        case 500: {
+          router.push("/500");
+          break;
+        }
+        default: {
+          router.push("/error");
+          break;
+        }
+      }
+    }
+    setIsSubmitting(false);
   };
 
   const handleRegisterClick = () => {
@@ -49,18 +88,21 @@ const LoginPage = () => {
             label="Username/Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={isSubmitting}
           />
           <TextField
             label="Password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={isSubmitting}
           />
           <Button
             variant="contained"
             onClick={handleLogin}
+            disabled={isSubmitting}
           >
-            Login
+            {isSubmitting ? "Logging in..." : "Log in"}
           </Button>
           <Button
             variant="contained"
@@ -71,6 +113,7 @@ const LoginPage = () => {
           <Button
             variant="contained"
             onClick={handleCancelClick}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
