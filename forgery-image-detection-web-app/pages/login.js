@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Button, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import PersonIcon from "@mui/icons-material/Person";
+import { signIn, useSession } from "next-auth/react";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -10,49 +11,32 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { data: session } = useSession(); // Get session status
+
+  useEffect(() => {
+    if (session) {
+      router.push("/");
+    }
+  }, [session]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const userInfo = {
-      email: email,
-      password: password,
-    };
-
-    const response = await fetch("/api/user-crud", {
-      method: "POST",
-      body: JSON.stringify(userInfo),
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
     });
 
-    if (response.ok) {
-      // alert("User registered successfully");
+    if (!result.error) {
+      console.log("Login successful");
       router.push("/");
     } else {
-      const errCode = response.status;
-      const errMessage = await response.json();
-      alert(
-        `${response.status} - ${response.statusText} : ${errMessage.message}\nPlease try again.`
-      );
-
-      switch (errCode) {
-        case 400: {
-          router.push("/400");
-          break;
-        }
-        case 404: {
-          router.push("/404");
-          break;
-        }
-        case 500: {
-          router.push("/500");
-          break;
-        }
-        default: {
-          router.push("/error");
-          break;
-        }
-      }
+      console.error("Login failed");
+      alert("Login failed. Please check your credentials and try again.");
     }
+
     setIsSubmitting(false);
   };
 
@@ -68,7 +52,7 @@ const LoginPage = () => {
     <div>
       <h1>Login Page</h1>
 
-      <label htmlFor="login">
+      <form onSubmit={handleLogin}>
         <Box
           id="login-box"
           sx={{
@@ -78,9 +62,9 @@ const LoginPage = () => {
             borderRadius: "8px",
             display: "flex",
             flexDirection: "column", // Align children vertically
-            //justifyContent: "center",
             alignItems: "center",
             cursor: "pointer",
+            padding: "20px",
           }}
         >
           <PersonIcon style={{ fontSize: "5rem" }} />
@@ -89,6 +73,7 @@ const LoginPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isSubmitting}
+            required
           />
           <TextField
             label="Password"
@@ -96,10 +81,11 @@ const LoginPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={isSubmitting}
+            required
           />
           <Button
             variant="contained"
-            onClick={handleLogin}
+            type="submit"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Logging in..." : "Log in"}
@@ -107,6 +93,7 @@ const LoginPage = () => {
           <Button
             variant="contained"
             onClick={handleRegisterClick}
+            disabled={isSubmitting}
           >
             Register New Account
           </Button>
@@ -118,7 +105,7 @@ const LoginPage = () => {
             Cancel
           </Button>
         </Box>
-      </label>
+      </form>
     </div>
   );
 };

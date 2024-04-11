@@ -23,7 +23,7 @@ const LoginPage = () => {
       password: password,
     };
 
-    const response = await fetch("/api/user-crud", {
+    const response = await fetch("/api/auth/signup-endpoint", {
       method: "POST",
       body: JSON.stringify(userInfo),
     });

@@ -1,5 +1,5 @@
 import mysql from "mysql2/promise";
-import { signIn } from "@auth";
+import { getSession } from "next-auth/react";
 
 const connection = await mysql.createConnection({
   host: "localhost",
@@ -7,22 +7,16 @@ const connection = await mysql.createConnection({
   database: "fyp",
 });
 
-const registerAcc = async (newUser) => {
+const retriveProfile = async (userId) => {
   try {
-    const parsedNewUser = JSON.parse(newUser);
-    const [results] = await connection.query(
-      "INSERT INTO users (username, email, contact, password) VALUES (?, ?, ?, ?)",
-      [
-        parsedNewUser.username,
-        parsedNewUser.email,
-        parsedNewUser.contact,
-        parsedNewUser.password,
-      ]
+    const [rows] = await connection.execute(
+      "SELECT username, email, contact FROM users WHERE id = ?",
+      [userId]
     );
-    console.log("User registered successfully");
-    return results;
+    return rows[0];
   } catch (error) {
-    console.error("Error registering user:", error.message);
+    console.error("Error retrieving profile:", error);
+    throw error;
   }
 };
 
@@ -32,31 +26,34 @@ export default async function handler(req, res) {
   try {
     switch (method) {
       case "GET": {
-        // try {
-        //   let todos = await getTodos();
-        //   let { filteredList, maxPage } = await filterAndSortList(
-        //     todos,
-        //     queryObj
-        //   );
+        const session = await getSession({ req });
+        console.log(session);
+        if (!session) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
 
-        //   res.status(200).json({ todos: filteredList, maxPage: maxPage });
-        // } catch (error) {
-        //   res.status(500).json({ message: "Error reading todo" });
-        // }
+        try {
+          const profile = await retriveProfile(session.user.userId);
+          res.status(200).json(profile);
+        } catch (error) {
+          console.error("Error retrieving profile:", error);
+          res.status(500).json({ message: "Error retrieving profile" });
+        }
         break;
       }
       case "POST": {
-        try {
-          const newUser = req.body;
-          if (!newUser) {
-            res.status(400).json({ message: "Invalid request: Body required" });
-            return;
-          }
-          await registerAcc(newUser);
-          res.status(201).json({ message: "Register successfully" });
-        } catch (error) {
-          res.status(500).json({ message: "Error registering new user." });
-        }
+        // try {
+        //   const newUser = req.body;
+
+        //   if (!newUser) {
+        //     res.status(400).json({ message: "Invalid request: Body required" });
+        //     return;
+        //   }
+        //   await registerAcc(newUser);
+        //   res.status(201).json({ message: "Register successfully" });
+        // } catch (error) {
+        //   res.status(500).json({ message: "Error registering new user." });
+        // }
         break;
       }
       case "PUT": {

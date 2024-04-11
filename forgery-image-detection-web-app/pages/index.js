@@ -93,7 +93,7 @@ export default function Home() {
           <img
             src={selectedImage}
             alt="Selected"
-            style={{ maxWidth: "100%", marginTop: "20px" }}
+            style={{ maxWidth: "20%", marginTop: "20px" }}
           />
           <Button
             variant="outlined"

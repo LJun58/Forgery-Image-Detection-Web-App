@@ -13,6 +13,7 @@ import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { signOut, useSession } from "next-auth/react";
 
 const pages = ["Home", "Tutorial", "About Us"];
 const settings = ["Profile", "Account", "History", "Logout"];
@@ -21,6 +22,8 @@ function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const router = useRouter(); // Initialize useRouter
+  const { data: session, status } = useSession();
+  if (session) console.log(session);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -48,6 +51,29 @@ function ResponsiveAppBar() {
   const handleTutorialClick = () => {
     router.push("/tutorial");
     handleCloseNavMenu();
+  };
+  const handleProfileClick = () => {
+    router.push("/profile");
+    handleCloseNavMenu();
+  };
+  const handleHistoryClick = () => {
+    router.push("/histoty");
+    handleCloseNavMenu();
+  };
+  const handleLoginClick = () => {
+    router.push("/login");
+    handleCloseNavMenu();
+  };
+
+  const handleLogoutClick = async (e) => {
+    const result = await signOut({ redirect: false, callbackUrl: "/" });
+    if (!result.error) {
+      console.log("Logout successful");
+      router.push("/");
+    } else {
+      console.error("Logout failed");
+      alert("Logout failed. Please try again.");
+    }
   };
 
   return (
@@ -192,15 +218,55 @@ function ResponsiveAppBar() {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              {settings.map((setting) => (
+              {session ? (
+                <>
+                  {/* {settings.map((setting) => (
                 <MenuItem
                   key={setting}
                   onClick={handleCloseUserMenu}
                 >
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>
-              ))}
+              ))} */}
+                  <Button
+                    onClick={handleProfileClick}
+                    sx={{ my: 2, color: "black", display: "block" }}
+                  >
+                    Profile
+                  </Button>
+                  <Button
+                    onClick={handleHistoryClick}
+                    sx={{ my: 2, color: "black", display: "block" }}
+                  >
+                    History
+                  </Button>
+                  <Button
+                    onClick={handleLogoutClick}
+                    sx={{ my: 2, color: "black", display: "block" }}
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={handleLoginClick}
+                  sx={{ my: 2, color: "black", display: "block" }}
+                >
+                  Login
+                </Button>
+              )}
             </Menu>
+            {session && session.user && (
+              <>
+                {/* Your code that accesses session.user.email */}
+                <Typography
+                  variant="body1"
+                  component="div"
+                >
+                  Email: {session.user.email}
+                </Typography>
+              </>
+            )}
           </Box>
         </Toolbar>
       </Container>
