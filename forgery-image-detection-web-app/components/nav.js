@@ -57,7 +57,7 @@ function ResponsiveAppBar() {
     handleCloseNavMenu();
   };
   const handleHistoryClick = () => {
-    router.push("/histoty");
+    router.push("/history");
     handleCloseNavMenu();
   };
   const handleLoginClick = () => {
@@ -262,9 +262,7 @@ function ResponsiveAppBar() {
                 <Typography
                   variant="body1"
                   component="div"
-                >
-                  Email: {session.user.email}
-                </Typography>
+                ></Typography>
               </>
             )}
           </Box>

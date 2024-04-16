@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import PersonIcon from "@mui/icons-material/Person";
+import { useSession } from "next-auth/react";
+import { SuccessfulModal } from "@/components/modal/successfulRegisteredModal";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -11,6 +13,15 @@ const LoginPage = () => {
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isShowSuccessfulModal, setIsShowSuccessfulModal] = useState(false);
+
+  const { data: session } = useSession(); // Get session status
+
+  useEffect(() => {
+    if (session) {
+      router.push("/");
+    }
+  }, [session]);
 
   const handleRigister = async (e) => {
     e.preventDefault();
@@ -30,7 +41,8 @@ const LoginPage = () => {
 
     if (response.ok) {
       // alert("User registered successfully");
-      router.push("/");
+      // router.push("/login");
+      setIsShowSuccessfulModal(true);
     } else {
       const errCode = response.status;
       const errMessage = await response.json();
@@ -65,41 +77,65 @@ const LoginPage = () => {
   };
 
   return (
-    <div>
-      <h1>Signup Page</h1>
-
-      <label htmlFor="login">
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        // alignItems: "center",
+        // height: "100vh",
+        marginBottom: "5%",
+      }}
+    >
+      <form onSubmit={handleRigister}>
         <Box
-          id="login-box"
+          id="signup-box"
           sx={{
             width: "30em",
-            height: "50em",
+            height: "37em",
             border: "2px solid #aaa",
             borderRadius: "8px",
             display: "flex",
-            flexDirection: "column", // Align children vertically
-            //justifyContent: "center",
+            flexDirection: "column",
             alignItems: "center",
+            padding: "20px",
+            marginTop: "5%",
           }}
         >
+          <Typography variant="h4">Register</Typography>
           <PersonIcon style={{ fontSize: "5rem" }} />
+
           <TextField
             label="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             disabled={isSubmitting}
+            required
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           />
           <TextField
             label="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isSubmitting}
+            required
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           />
           <TextField
             label="Contact Number"
             value={contact}
             onChange={(e) => setContact(e.target.value)}
             disabled={isSubmitting}
+            required
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           />
           <TextField
             label="Password"
@@ -107,24 +143,49 @@ const LoginPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={isSubmitting}
+            required
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           />
           <Button
             variant="contained"
-            onClick={handleRigister}
+            type="submit"
             disabled={isSubmitting}
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           >
             {isSubmitting ? "Registering..." : "Register"}
           </Button>
+
           <Button
-            variant="contained"
+            variant="text"
             onClick={handleCancelClick}
             disabled={isSubmitting}
+            color="cancelButton"
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           >
             Cancel
           </Button>
-          <p>Have an account? click here to login!</p>
+          <spam
+            onClick={(e) => router.push("/login")}
+            style={{ cursor: "pointer", textDecoration: "underline" }}
+          >
+            Have an account? Click here to login!
+          </spam>
         </Box>
-      </label>
+
+        <SuccessfulModal
+          open={isShowSuccessfulModal}
+          onClose={() => setIsShowSuccessfulModal(false)}
+        />
+      </form>
     </div>
   );
 };

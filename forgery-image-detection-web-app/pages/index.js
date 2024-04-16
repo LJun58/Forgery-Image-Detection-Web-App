@@ -1,120 +1,175 @@
+import React, { useState, useRef } from "react";
 import Head from "next/head";
-import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 
-export default function Home() {
-  const [selectedImage, setSelectedImage] = useState(null);
+export default function DragDropImageUploader() {
+  const [images, setImages] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+  const fileInputRef = useRef(null);
 
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+  const selectFiles = () => {
+    fileInputRef.current.click();
+  };
+
+  const onFileSelect = (e) => {
+    const files = e.target.files;
+    if (files.length === 0) return;
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].type.split("/")[0] !== "image") continue;
+      if (!images.some((e) => e.name === files[i].name)) {
+        setImages((prevImages) => [
+          ...prevImages,
+          {
+            name: files[i].name,
+            file: files[i], // Store the file object
+            url: URL.createObjectURL(files[i]),
+          },
+        ]);
+      }
     }
   };
 
-  const handleImageClear = () => {
-    setSelectedImage(null);
+  const deleteImage = (index) => {
+    setImages((prevImages) => prevImages.filter((_, i) => i != index));
   };
 
-  const handleImageSubmit = () => {
-    // Add image submission logic (e.g., send to server for forgery detection)
-    alert("Image submitted for forgery detection!");
-  };
-
-  const handleDrop = (e) => {
+  const onDragOver = (e) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
+    setIsDragging(true);
+    e.dataTransfer.dropEffect = "copy";
+  };
 
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+  const onDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].type.split("/")[0] !== "image") continue;
+      if (!images.some((e) => e.name === files[i].name)) {
+        setImages((prevImages) => [
+          ...prevImages,
+          {
+            name: files[i].name,
+            file: files[i], // Store the file object
+            url: URL.createObjectURL(files[i]),
+          },
+        ]);
+      }
     }
   };
 
-  const preventDefault = (e) => {
-    e.preventDefault();
+  const uploadImages = async () => {
+    const formData = new FormData();
+    images.forEach((image) => {
+      formData.append("file", image.file); // Append each file to FormData
+    });
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/detectForgery", {
+        method: "POST",
+        body: formData,
+      });
+
+      const entries = formData.entries();
+      for (const pair of entries) {
+        console.log(pair[0] + ", " + pair[1]);
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data); // Handle the response data from the backend
+      } else {
+        console.error("Failed to detect forgery");
+      }
+    } catch (error) {
+      console.error("Error detecting forgery:", error);
+    }
   };
 
   return (
-    <div>
-      <Head>
-        <title>Forgery Image Detection</title>
-      </Head>
-
-      <h1>Forgery Image Detection</h1>
-      <label htmlFor="upload-input">
-        <Box
-          id="upload-box"
-          sx={{
-            width: "40em",
-            height: "20em",
-            border: "2px dashed #aaa",
-            borderRadius: "8px",
-            display: "flex",
-            flexDirection: "column", // Align children vertically
-            justifyContent: "center",
-            alignItems: "center",
-            cursor: "pointer",
-          }}
-          onDrop={handleDrop}
-          onDragOver={preventDefault}
-        >
-          <InsertPhotoIcon style={{ fontSize: "10rem" }} />
-          <div style={{ marginTop: "auto", textAlign: "center" }}>
-            <h2>
-              Drag & Drop image here <br />
-              or <br />
-              click to upload <FileUploadIcon style={{ fontSize: "3rem" }} />
-            </h2>
-          </div>
-        </Box>
-      </label>
-      <input
-        id="upload-input"
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={handleImageUpload}
-      />
-
-      {selectedImage && (
-        <div>
-          <img
-            src={selectedImage}
-            alt="Selected"
-            style={{ maxWidth: "20%", marginTop: "20px" }}
-          />
-          <Button
-            variant="outlined"
-            onClick={handleImageClear}
-            style={{ marginTop: "20px" }}
-          >
-            Clear Image
-          </Button>
-        </div>
-      )}
-
-      <div style={{ marginTop: "20px" }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleImageSubmit}
-          disabled={!selectedImage}
-        >
-          Submit for Forgery Detection
-        </Button>
+    <Box className="upload-box">
+      <div className="top">
+        <p>Drag & Drop Image Uploading</p>
       </div>
-    </div>
+      <Box
+        className="drag-area"
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        sx={{
+          cursor: "pointer",
+        }}
+        onClick={selectFiles}
+      >
+        <div>
+          <InsertPhotoIcon style={{ fontSize: "10rem" }} />
+        </div>
+
+        {isDragging ? (
+          <div className="select">Drop Images Here</div>
+        ) : (
+          <>
+            Drag & Drop Image here
+            <span>or</span>
+            <span
+              className="select"
+              role="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                selectFiles();
+              }}
+              style={{ display: "flex", alignItems: "center" }}
+            >
+              Click Here to Browse{" "}
+              <FileUploadIcon style={{ fontSize: "2rem" }} />
+            </span>
+          </>
+        )}
+
+        <input
+          name="file"
+          type="file"
+          className="file"
+          accept="image/*"
+          multiple
+          ref={fileInputRef}
+          onChange={onFileSelect}
+        />
+      </Box>
+      <Box className="container">
+        {images.map((image, index) => (
+          <div
+            className="image"
+            key={index}
+          >
+            <span
+              className="delete"
+              onClick={() => deleteImage(index)}
+            >
+              &times;
+            </span>
+            <img
+              src={image.url}
+              alt={image.name}
+            />
+          </div>
+        ))}
+      </Box>
+      <Button
+        variant="contained"
+        onClick={uploadImages}
+      >
+        Upload
+      </Button>
+    </Box>
   );
 }

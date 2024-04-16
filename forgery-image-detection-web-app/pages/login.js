@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import PersonIcon from "@mui/icons-material/Person";
 import { signIn, useSession } from "next-auth/react";
@@ -40,33 +40,40 @@ const LoginPage = () => {
     setIsSubmitting(false);
   };
 
-  const handleRegisterClick = () => {
-    router.push("/signup");
-  };
+  // const handleRegisterClick = () => {
+  //   router.push("/signup");
+  // };
 
   const handleCancelClick = () => {
     router.push("/");
   };
 
   return (
-    <div>
-      <h1>Login Page</h1>
-
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        // alignItems: "center",
+        // height: "100vh",
+        marginBottom: "5%",
+      }}
+    >
       <form onSubmit={handleLogin}>
         <Box
           id="login-box"
           sx={{
             width: "30em",
-            height: "50em",
+            height: "30em",
             border: "2px solid #aaa",
             borderRadius: "8px",
             display: "flex",
-            flexDirection: "column", // Align children vertically
+            flexDirection: "column",
             alignItems: "center",
-            cursor: "pointer",
             padding: "20px",
+            marginTop: "5%",
           }}
         >
+          <Typography variant="h4">Login</Typography>
           <PersonIcon style={{ fontSize: "5rem" }} />
           <TextField
             label="Username/Email"
@@ -74,6 +81,10 @@ const LoginPage = () => {
             onChange={(e) => setEmail(e.target.value)}
             disabled={isSubmitting}
             required
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           />
           <TextField
             label="Password"
@@ -82,28 +93,41 @@ const LoginPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isSubmitting}
             required
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           />
           <Button
             variant="contained"
             type="submit"
             disabled={isSubmitting}
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           >
             {isSubmitting ? "Logging in..." : "Log in"}
           </Button>
+
           <Button
-            variant="contained"
-            onClick={handleRegisterClick}
-            disabled={isSubmitting}
-          >
-            Register New Account
-          </Button>
-          <Button
-            variant="contained"
+            variant="text"
             onClick={handleCancelClick}
             disabled={isSubmitting}
+            color="cancelButton"
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
           >
             Cancel
           </Button>
+          <spam
+            onClick={(e) => router.push("/signup")}
+            style={{ cursor: "pointer", textDecoration: "underline" }}
+          >
+            New user? Click here to register!
+          </spam>
         </Box>
       </form>
     </div>

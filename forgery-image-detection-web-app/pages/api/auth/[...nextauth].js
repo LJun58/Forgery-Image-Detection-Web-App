@@ -10,14 +10,15 @@ export default NextAuth({
       async authorize(credentials) {
         const { email, password } = credentials;
 
-        const connection = await mysql.createConnection({
-          host: process.env.MYSQL_HOST,
-          user: process.env.MYSQL_USER,
-          password: process.env.MYSQL_PASSWORD,
-          database: process.env.MYSQL_DATABASE,
-        });
-
         try {
+          // Create a MySQL connection
+          const connection = await mysql.createConnection({
+            host: process.env.MYSQL_HOST,
+            user: process.env.MYSQL_USER,
+            password: process.env.MYSQL_PASSWORD,
+            database: process.env.MYSQL_DATABASE,
+          });
+
           // Fetch user from the database
           const [rows] = await connection.execute(
             "SELECT id, email, password FROM users WHERE email = ?",
@@ -33,9 +34,7 @@ export default NextAuth({
             throw new Error("Invalid email or password");
           }
 
-          // Return user ID as token
-          const token = { userId: user.id };
-          return Promise.resolve(token);
+          return user;
         } catch (error) {
           // Handle errors
           console.error("Error:", error);
@@ -45,27 +44,24 @@ export default NextAuth({
     }),
   ],
   session: {
-    jwt: true,
+    strategy: "jwt",
   },
   callbacks: {
-    async jwt(token, user) {
-      // If user is authenticated, add user data to token
+    async session({ session, user, token }) {
+      // console.log("session:", session);
+      if (token) {
+        session.user.email = token.email;
+        session.user.id = token.sub;
+      }
+      return session;
+    },
+    async jwt({ token, user, accountdd, profile }) {
+      // console.log(token.sub);
+
       if (user) {
-        token.userId = user.userId;
+        token.role = user.role;
       }
       return token;
-    },
-    async session(session) {
-      // Assign userId from token to session.user
-      session.session.user = {
-        ...session.session.user,
-        userId: session.token.token.user.userId,
-      };
-
-      // Delete the token property after extracting user data
-      delete session.token;
-
-      return session;
     },
   },
 });

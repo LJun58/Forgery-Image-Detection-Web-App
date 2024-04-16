@@ -36,7 +36,9 @@ export default async function handler(req, res) {
       res.status(400).json({ message: "Invalid request: Body required" });
       return;
     }
+
     await registerAcc(newUser);
+
     res.status(201).json({ message: "Register successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error registering new user." });
