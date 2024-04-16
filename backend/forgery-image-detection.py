@@ -80,33 +80,100 @@ def preprocess_image(image_path):
     return all_features
 
 # Define the endpoint for forgery detection
+# @app.route('/api/detectForgery', methods=['POST'])
+# def detect_forgery():
+#     print("processing...")
+#     if 'file' not in request.files:
+#         return jsonify({'result': 'No file uploaded'}), 400
+    
+#     # file = request.files['file']
+#     # if file.filename == '':
+#     #     return jsonify({'result': 'No selected file'}), 400
+    
+#     # # Save the uploaded file temporarily
+#     # filename = 'temp_image.jpg'
+#     # file.save(filename)
+
+#     # # Authenticate the image
+#     # authentication_result = authenticate_image(filename, model)
+
+#     # # Delete the temporary file
+#     # os.remove(filename)
+#     # print("Done...")
+
+#     # # Return the result
+#     # if authentication_result == 1:
+#     #     return jsonify({'result': 'Forgery detected in the image.'})
+#     # else:
+#     #     return jsonify({'result': 'The image is authentic.'})
+
+#     files = request.files.getlist('file')
+    
+#     results = []
+    
+#     # for file in files:
+#     #     filename = f'temp_image_{files.filename}'
+#     #     file.save(filename)
+        
+#     #     authentication_result = authenticate_image(filename, model)
+        
+#     #     os.remove(filename)
+        
+#     #     results.append({
+#     #         'filename': file.filename,
+#     #         'result': 'Forgery detected in the image.' if authentication_result == 1 else 'The image is authentic.'
+#     #     })
+    
+#     for idx, file in enumerate(files):
+#         filename = f'temp_image_{idx}_{files.filename}'
+#         file.save(filename)
+        
+#         authentication_result = authenticate_image(filename, model)
+        
+#         os.remove(filename)
+        
+#         results.append({
+#             'filename': file.filename,
+#             'result': 'Forgery detected in the image.' if authentication_result == 1 else 'The image is authentic.'
+#         })
+        
+        
+#     print("Done...")
+#     return jsonify({'results': results})  # Return list of results
+    
 @app.route('/api/detectForgery', methods=['POST'])
 def detect_forgery():
     print("processing...")
     if 'file' not in request.files:
         return jsonify({'result': 'No file uploaded'}), 400
     
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'result': 'No selected file'}), 400
-    
-    # Save the uploaded file temporarily
-    filename = 'temp_image.jpg'
-    file.save(filename)
+    files = request.files.getlist('file')  # Get all uploaded files
+    results = []
 
-    # Authenticate the image
-    authentication_result = authenticate_image(filename, model)
+    for file in files:
+        if file.filename == '':
+            results.append({'result': 'No selected file'})
+            continue
 
-    # Delete the temporary file
-    os.remove(filename)
+        # Save the uploaded file temporarily
+        filename = 'temp_image.jpg'
+        file.save(filename)
+
+        # Authenticate the image
+        authentication_result = authenticate_image(filename, model)
+
+        # Delete the temporary file
+        os.remove(filename)
+
+        # Append the result for this image
+        if authentication_result == 1:
+            results.append({'result': 'Forgery detected in the image.'})
+        else:
+            results.append({'result': 'The image is authentic.'})
+
     print("Done...")
+    return jsonify(results)
 
-    # Return the result
-    if authentication_result == 1:
-        return jsonify({'result': 'Forgery detected in the image.'})
-    else:
-        return jsonify({'result': 'The image is authentic.'})
-    
 
 
 

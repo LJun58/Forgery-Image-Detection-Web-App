@@ -69,9 +69,12 @@ export default function DragDropImageUploader() {
 
   const uploadImages = async () => {
     const formData = new FormData();
-    images.forEach((image) => {
-      formData.append("file", image.file); // Append each file to FormData
-    });
+    // images.forEach((image) => {
+    //   formData.append("file", image.file); // Append each file to FormData
+    // });
+    for (const image of images) {
+      formData.append("file", image.file);
+    }
 
     try {
       const response = await fetch("http://127.0.0.1:5000/api/detectForgery", {
