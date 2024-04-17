@@ -4,10 +4,13 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
+import { ResultModal } from "@/components/modal/resultModal";
 
 export default function DragDropImageUploader() {
   const [images, setImages] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState([]);
 
   const fileInputRef = useRef(null);
 
@@ -68,6 +71,7 @@ export default function DragDropImageUploader() {
   };
 
   const uploadImages = async () => {
+    console.log(images);
     const formData = new FormData();
     // images.forEach((image) => {
     //   formData.append("file", image.file); // Append each file to FormData
@@ -89,7 +93,14 @@ export default function DragDropImageUploader() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data); // Handle the response data from the backend
+        const resultsWithImages = images.map((image, index) => ({
+          image: image.name,
+          url: image.url,
+          result: data[index].result,
+        }));
+        console.log(resultsWithImages);
+        setResults(resultsWithImages);
+        setOpen(true);
       } else {
         console.error("Failed to detect forgery");
       }
@@ -103,6 +114,11 @@ export default function DragDropImageUploader() {
       <div className="top">
         <p>Drag & Drop Image Uploading</p>
       </div>
+      <ResultModal
+        open={open}
+        onClose={() => setOpen(false)}
+        results={results}
+      />
       <Box
         className="drag-area"
         onDragOver={onDragOver}
