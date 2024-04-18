@@ -5,12 +5,25 @@ import Button from "@mui/material/Button";
 import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { ResultModal } from "@/components/modal/resultModal";
+import { useSession } from "next-auth/react";
+import {
+  db,
+  collection,
+  writeBatch,
+  addDoc,
+  storage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from "@/firebase";
 
 export default function DragDropImageUploader() {
   const [images, setImages] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState([]);
+  const { data: session, status } = useSession();
+  if (session) console.log(session);
 
   const fileInputRef = useRef(null);
 
@@ -70,6 +83,18 @@ export default function DragDropImageUploader() {
     }
   };
 
+  async function uploadImageToStorage(image) {
+    const imageRef = ref(storage, `userImages/${image.name}`); // Create a reference with user ID and image name
+    try {
+      await uploadBytes(imageRef, image.file); // Upload the image file object
+      const downloadURL = await getDownloadURL(imageRef); // Get the download URL after upload
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return null;
+    }
+  }
+
   const uploadImages = async () => {
     console.log(images);
     const formData = new FormData();
@@ -93,13 +118,41 @@ export default function DragDropImageUploader() {
 
       if (response.ok) {
         const data = await response.json();
-        const resultsWithImages = images.map((image, index) => ({
-          image: image.name,
-          url: image.url,
-          result: data[index].result,
+        const userId = session.user.id;
+        const userImagesRef = collection(db, "userImages");
+
+        const promises = images.map(async (image, index) => {
+          try {
+            const downloadURL = await uploadImageToStorage(image);
+            if (!downloadURL) return null;
+
+            const docRef = await addDoc(userImagesRef, {
+              userId: userId,
+              imageName: image.name,
+              imageURL: downloadURL,
+              result: parseInt(data[index].result),
+              createdAt: new Date(),
+            });
+            return { docRef, index };
+          } catch (error) {
+            console.error("Error adding document: ", error);
+            return null;
+          }
+        });
+
+        const resultsWithImages = await Promise.all(promises);
+        const resultsFiltered = resultsWithImages.filter(
+          (result) => result !== null
+        );
+
+        const resultsData = resultsFiltered.map(({ docRef, index }) => ({
+          image: images[index].name,
+          url: images[index].url,
+          result: parseInt(data[index].result),
         }));
-        console.log(resultsWithImages);
-        setResults(resultsWithImages);
+
+        console.log("ResultWithImages:", resultsData);
+        setResults(resultsData);
         setOpen(true);
       } else {
         console.error("Failed to detect forgery");

@@ -167,9 +167,9 @@ def detect_forgery():
 
         # Append the result for this image
         if authentication_result == 1:
-            results.append({'result': 'Forgery detected in the image.'})
+            results.append({'result': '1'})
         else:
-            results.append({'result': 'The image is authentic.'})
+            results.append({'result': '0'})
 
     print("Done...")
     return jsonify(results)

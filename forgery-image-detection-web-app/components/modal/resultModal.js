@@ -91,7 +91,11 @@ export function ResultModal({ open, onClose, results }) {
                     onMouseLeave={handleImageLeave}
                   />
                 </Button>
-                <Typography variant="body1">{result.result}</Typography>
+                <Typography variant="body1">
+                  {result.result === 0
+                    ? "The image is authentic"
+                    : "The image is forged."}
+                </Typography>
               </Box>
             ))
           ) : (
