@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/firebase"; // Assuming your firebase config is in "@/firebase"
+import { db, storage } from "@/firebase"; // Assuming your firebase config is in "@/firebase"
 import { getSession } from "next-auth/react";
 import {
   Table,
@@ -15,9 +15,13 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 import FullImageModal from "@/components/modal/fullImageModal";
+import { deleteDoc, doc } from "firebase/firestore";
+import { ref, deleteObject } from "firebase/storage";
+import { useRouter } from "next/router";
 
 const History = ({ historyData }) => {
   const [fullImageOpen, setFullImageOpen] = useState(null);
+  const router = useRouter();
 
   const handleFullImageOpen = (index) => {
     setFullImageOpen(index);
@@ -25,6 +29,34 @@ const History = ({ historyData }) => {
 
   const handleModalClose = () => {
     setFullImageOpen(null);
+  };
+
+  const deleteImage = async (id, imageUrl, storage) => {
+    try {
+      // Confirm deletion with the user
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete this image?"
+      );
+      if (!confirmDelete) {
+        return; // Exit if user cancels
+      }
+
+      // Delete from Firestore
+      await deleteDoc(doc(db, "userImages", id));
+
+      // Delete from Cloud Storage (assuming the URL points to Cloud Storage)
+      const imageRef = ref(storage, imageUrl);
+      await deleteObject(imageRef);
+
+      console.log("Image deleted successfully!");
+      router.push(router.asPath);
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      // Display an error message to the user
+      alert(
+        "An error occurred while deleting the image. Please try again later."
+      );
+    }
   };
 
   return (
@@ -75,7 +107,11 @@ const History = ({ historyData }) => {
                       {item.result === 0 ? "Authentic" : "Forged."}
                     </TableCell>
                     <TableCell>
-                      <IconButton>
+                      <IconButton
+                        onClick={() =>
+                          deleteImage(item.id, item.imageURL, storage)
+                        }
+                      >
                         <DeleteIcon color="deleteIcon" />
                       </IconButton>
                     </TableCell>
