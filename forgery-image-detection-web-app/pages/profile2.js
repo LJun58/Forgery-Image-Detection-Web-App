@@ -13,7 +13,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import Stack from "@mui/material/Stack";
-import { useRouter } from "next/router";
 
 function stringToColor(string) {
   let hash = 0;
@@ -51,7 +50,6 @@ function ProfilePage({ profile }) {
   const [editedProfile, setEditedProfile] = useState(profile);
   const [originalProfile, setOriginalProfile] = useState(profile);
   const { data: session } = useSession();
-  const router = useRouter();
 
   // Update editedProfile state when profile prop changes
   useEffect(() => {
@@ -70,50 +68,26 @@ function ProfilePage({ profile }) {
   };
 
   const handleSave = async () => {
-    const response = await fetch("/api/profile", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        // Authorization: $(session.user.accessToken),
-        // withCredentials: true,
-      },
-      body: JSON.stringify({
-        userId: session.user.id,
-        editedProfile: editedProfile,
-      }),
-    });
+    if (!session) {
+      // Handle the case where the user is not authenticated (redirect, etc.)
+      console.error("User is not authenticated");
+      return;
+    }
 
-    if (response.ok) {
-      router.push(router.asPath);
+    const sessionToken = session?.accessToken;
+
+    try {
+      await axios.put("/api/saveProfile", {
+        editedProfile,
+      });
+
       // After successfully saving, update the originalProfile state
       setOriginalProfile(editedProfile);
       // Disable edit mode
       setEditMode(false);
-    } else {
-      const errCode = response.status;
-      const errMessage = await response.json();
-      alert(
-        `${response.status} - ${response.statusText} : ${errMessage.message}\nPlease try again.`
-      );
-
-      switch (errCode) {
-        case 400: {
-          router.push("/400");
-          break;
-        }
-        case 404: {
-          router.push("/404");
-          break;
-        }
-        case 500: {
-          router.push("/500");
-          break;
-        }
-        default: {
-          router.push("/error");
-          break;
-        }
-      }
+    } catch (error) {
+      // console.error("Failed to save profile:", error);
+      // Handle error saving profile
     }
   };
 
@@ -152,15 +126,12 @@ function ProfilePage({ profile }) {
             }}
           >
             <Avatar
-              // alt={profile.username}
-              // src={profile.avatarUrl}
-              sx={{ width: 100, height: 100 }}
-              // style={{ fontSize: "2rem" }}
               {...stringAvatar(profile.username)}
+              sx={{ width: 70, height: 70 }}
             />
             <Typography
               variant="h6"
-              sx={{ marginBottom: 2, color: "#333", fontWeight: "bold" }} // Added fontWeight: "bold"
+              sx={{ marginBottom: 2, color: "#333", fontWeight: "bold" }}
             >
               {profile.username}
             </Typography>
@@ -168,12 +139,12 @@ function ProfilePage({ profile }) {
 
           <Typography
             variant="h4"
-            sx={{ color: "#666", marginBottom: 1, fontWeight: "bold" }} // Added fontWeight: "bold"
+            sx={{ color: "#666", marginBottom: 1, fontWeight: "bold" }}
           >
             Username:
           </Typography>
           <TextField
-            name="username" // Corrected the name attribute to "username"
+            name="username"
             value={editMode ? editedProfile.username : profile.username}
             onChange={handleInputChange}
             variant="outlined"
@@ -186,7 +157,7 @@ function ProfilePage({ profile }) {
 
           <Typography
             variant="h4"
-            sx={{ color: "#666", marginBottom: 1, fontWeight: "bold" }} // Added fontWeight: "bold"
+            sx={{ color: "#666", marginBottom: 1, fontWeight: "bold" }}
           >
             Email:
           </Typography>
@@ -203,7 +174,7 @@ function ProfilePage({ profile }) {
           />
           <Typography
             variant="h4"
-            sx={{ color: "#666", marginBottom: 1, fontWeight: "bold" }} // Added fontWeight: "bold"
+            sx={{ color: "#666", marginBottom: 1, fontWeight: "bold" }}
           >
             Contact:
           </Typography>
@@ -268,7 +239,7 @@ function ProfilePage({ profile }) {
 export async function getServerSideProps(context) {
   const session = await getSession(context);
   let profile = null;
-
+  console.log("header in getServerSideProps: ", context.req.headers.cookie);
   if (session) {
     try {
       const response = await axios.get("http://localhost:3000/api/profile", {

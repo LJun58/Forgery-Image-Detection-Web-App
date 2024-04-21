@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import mysql from "mysql2/promise";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 export default NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
@@ -45,21 +46,29 @@ export default NextAuth({
   ],
   session: {
     strategy: "jwt",
+    strict: false,
+    jwt: true,
   },
   callbacks: {
     async session({ session, user, token }) {
-      // console.log("session:", session);
+      // console.log("token:", token);
       if (token) {
         session.user.email = token.email;
         session.user.id = token.sub;
+        session.user.accessToken = token.accessToken;
       }
       return session;
     },
-    async jwt({ token, user, accountdd, profile }) {
-      // console.log(token.sub);
-
+    async jwt({ token, user, account, profile }) {
+      // Generate an access token using JWT
       if (user) {
-        token.role = user.role;
+        const accessToken = jwt.sign(
+          { userId: user.id },
+          process.env.NEXTAUTH_SECRET,
+          { expiresIn: "1h" }
+        ); // Replace with your desired expiration time
+        token.accessToken = accessToken; // Add access token to the token object
+        token.role = user.role; // Include role if available in the user object
       }
       return token;
     },
