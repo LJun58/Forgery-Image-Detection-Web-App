@@ -84,7 +84,9 @@ export default function DragDropImageUploader() {
   };
 
   async function uploadImageToStorage(image) {
-    const imageRef = ref(storage, `userImages/${image.name}`); // Create a reference with user ID and image name
+    const timestamp = Date.now(); // Get current timestamp
+    const uniqueFilename = `${timestamp}_${image.name}`; // Generate unique filename
+    const imageRef = ref(storage, `userImages/${uniqueFilename}`); // Create a reference with unique filename
     try {
       await uploadBytes(imageRef, image.file); // Upload the image file object
       const downloadURL = await getDownloadURL(imageRef); // Get the download URL after upload
@@ -96,6 +98,18 @@ export default function DragDropImageUploader() {
   }
 
   const uploadImages = async () => {
+    if (!session) {
+      alert("Please log in to upload images.");
+
+      window.location.href = "/login";
+      return;
+    }
+
+    if (images.length === 0) {
+      alert("Please upload at least one image before proceeding.");
+      return;
+    }
+
     console.log(images);
     const formData = new FormData();
     // images.forEach((image) => {
@@ -163,7 +177,10 @@ export default function DragDropImageUploader() {
   };
 
   return (
-    <Box className="upload-box">
+    <Box
+      className="upload-box"
+      sx={{ marginTop: "5%" }}
+    >
       <div className="top">
         <p>Drag & Drop Image Uploading</p>
       </div>
@@ -239,6 +256,7 @@ export default function DragDropImageUploader() {
       <Button
         variant="contained"
         onClick={uploadImages}
+        sx={{ marginTop: "3%", marginBottom: "1%" }}
       >
         Upload
       </Button>

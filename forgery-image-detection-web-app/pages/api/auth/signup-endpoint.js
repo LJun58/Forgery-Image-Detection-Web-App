@@ -10,21 +10,31 @@ const connection = await mysql.createConnection({
 const registerAcc = async (newUser) => {
   try {
     const parsedNewUser = JSON.parse(newUser);
-    const hashedPassword = await bcrypt.hash(parsedNewUser.password, 10);
+    const { username, email, contact, password } = parsedNewUser;
 
+    // Check if email already exists in the database
+    const [existingUsers] = await connection.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (existingUsers.length > 0) {
+      throw new Error("Email existed in the system. Please login instead.");
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert the new user into the database
     const [results] = await connection.query(
       "INSERT INTO users (username, email, contact, password) VALUES (?, ?, ?, ?)",
-      [
-        parsedNewUser.username,
-        parsedNewUser.email,
-        parsedNewUser.contact,
-        hashedPassword,
-      ]
+      [username, email, contact, hashedPassword]
     );
+
     console.log("User registered successfully");
     return results;
   } catch (error) {
-    console.error("Error registering user:", error.message);
+    throw new Error(`Error registering user: ${error.message}`);
   }
 };
 
@@ -41,6 +51,10 @@ export default async function handler(req, res) {
 
     res.status(201).json({ message: "Register successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error registering new user." });
+    if (error.message.includes("Email existed")) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "Error registering new user." });
+    }
   }
 }

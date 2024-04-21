@@ -8,12 +8,14 @@ import {
   Avatar,
   Button,
   TextField,
+  Alert,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import Stack from "@mui/material/Stack";
 import { useRouter } from "next/router";
+import Snackbar from "@mui/material/Snackbar";
 
 function stringToColor(string) {
   let hash = 0;
@@ -52,6 +54,12 @@ function ProfilePage({ profile }) {
   const [originalProfile, setOriginalProfile] = useState(profile);
   const { data: session } = useSession();
   const router = useRouter();
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [contactError, setContactError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
 
   // Update editedProfile state when profile prop changes
   useEffect(() => {
@@ -70,6 +78,23 @@ function ProfilePage({ profile }) {
   };
 
   const handleSave = async () => {
+    if (!editedProfile.username) {
+      setUsernameError("Please enter a username.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(editedProfile.email)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+
+    const contactRegex = /^\d+$/;
+    if (!contactRegex.test(editedProfile.contact)) {
+      setContactError("Please enter a valid contact number.");
+      return;
+    }
+
     const response = await fetch("/api/profile", {
       method: "PUT",
       headers: {
@@ -84,17 +109,31 @@ function ProfilePage({ profile }) {
     });
 
     if (response.ok) {
+      setOpenSnackbar(true);
+      setSnackbarSeverity("success");
+      setSnackbarMessage("Profile updated successfully!");
       router.push(router.asPath);
       // After successfully saving, update the originalProfile state
       setOriginalProfile(editedProfile);
       // Disable edit mode
       setEditMode(false);
+      setUsernameError("");
+      setEmailError("");
+      setContactError("");
     } else {
       const errCode = response.status;
       const errMessage = await response.json();
-      alert(
+      setOpenSnackbar(true);
+      setSnackbarSeverity("error");
+      setSnackbarMessage(
         `${response.status} - ${response.statusText} : ${errMessage.message}\nPlease try again.`
       );
+      setUsernameError("");
+      setEmailError("");
+      setContactError("");
+      // alert(
+      //   `${response.status} - ${response.statusText} : ${errMessage.message}\nPlease try again.`
+      // );
 
       switch (errCode) {
         case 400: {
@@ -120,6 +159,13 @@ function ProfilePage({ profile }) {
   const handleCancel = () => {
     setEditedProfile(originalProfile);
     setEditMode(false);
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
   };
 
   return (
@@ -178,6 +224,8 @@ function ProfilePage({ profile }) {
             onChange={handleInputChange}
             variant="outlined"
             fullWidth
+            error={!!usernameError}
+            helperText={usernameError}
             InputProps={{
               readOnly: !editMode,
               sx: { mb: 2 },
@@ -196,6 +244,8 @@ function ProfilePage({ profile }) {
             onChange={handleInputChange}
             variant="outlined"
             fullWidth
+            error={!!emailError}
+            helperText={emailError}
             InputProps={{
               readOnly: !editMode,
               sx: { mb: 2 },
@@ -213,10 +263,13 @@ function ProfilePage({ profile }) {
             onChange={handleInputChange}
             variant="outlined"
             fullWidth
+            error={!!contactError}
+            helperText={contactError}
             InputProps={{
               readOnly: !editMode,
               sx: { mb: 2 },
             }}
+            required
           />
           {!editMode && (
             <Stack
@@ -257,6 +310,13 @@ function ProfilePage({ profile }) {
               </Button>
             </Stack>
           )}
+          <Snackbar
+            open={openSnackbar}
+            autoHideDuration={6000} // Optional: Hide automatically after 6 seconds
+            onClose={handleSnackbarClose}
+          >
+            <Alert severity={snackbarSeverity}>{snackbarMessage}</Alert>
+          </Snackbar>
         </Box>
       ) : (
         <CircularProgress />

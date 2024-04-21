@@ -10,6 +10,8 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const { data: session } = useSession(); // Get session status
 
@@ -21,6 +23,23 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    if (!email.trim()) {
+      setEmailError("Please enter your email.");
+      return;
+    }
+
+    if (!password.trim()) {
+      setPasswordError("Please enter your password.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const result = await signIn("credentials", {
@@ -76,9 +95,11 @@ const LoginPage = () => {
           <Typography variant="h4">Login</Typography>
           <PersonIcon style={{ fontSize: "5rem" }} />
           <TextField
-            label="Username/Email"
+            label="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={!!emailError}
+            helperText={emailError}
             disabled={isSubmitting}
             required
             sx={{
@@ -91,6 +112,8 @@ const LoginPage = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            error={!!passwordError}
+            helperText={passwordError}
             disabled={isSubmitting}
             required
             sx={{

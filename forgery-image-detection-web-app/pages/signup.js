@@ -6,14 +6,18 @@ import PersonIcon from "@mui/icons-material/Person";
 import { useSession } from "next-auth/react";
 import { SuccessfulModal } from "@/components/modal/successfulRegisteredModal";
 
-const LoginPage = () => {
+const SignupPage = () => {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // New state for confirmation password
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isShowSuccessfulModal, setIsShowSuccessfulModal] = useState(false);
+  const [contactError, setContactError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState(""); // New state for confirmation password error
 
   const { data: session } = useSession(); // Get session status
 
@@ -23,8 +27,26 @@ const LoginPage = () => {
     }
   }, [session]);
 
-  const handleRigister = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+
+    const contactRegex = /^\d+$/;
+    if (!contactRegex.test(contact)) {
+      setContactError("Please enter a valid contact number.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const userInfo = {
@@ -40,32 +62,30 @@ const LoginPage = () => {
     });
 
     if (response.ok) {
-      // alert("User registered successfully");
-      // router.push("/login");
       setIsShowSuccessfulModal(true);
     } else {
-      const errCode = response.status;
-      const errMessage = await response.json();
-      alert(
-        `${response.status} - ${response.statusText} : ${errMessage.message}\nPlease try again.`
-      );
+      const data = await response.json();
+      if (response.status === 400 && data.message.includes("Email existed")) {
+        alert(data.message);
+      } else {
+        const errCode = response.status;
+        alert(
+          `${response.status} - ${response.statusText} : ${data.message}\nPlease try again.`
+        );
 
-      switch (errCode) {
-        case 400: {
-          router.push("/400");
-          break;
-        }
-        case 404: {
-          router.push("/404");
-          break;
-        }
-        case 500: {
-          router.push("/500");
-          break;
-        }
-        default: {
-          router.push("/error");
-          break;
+        switch (errCode) {
+          case 404: {
+            router.push("/404");
+            break;
+          }
+          case 500: {
+            router.push("/500");
+            break;
+          }
+          default: {
+            router.push("/error");
+            break;
+          }
         }
       }
     }
@@ -81,17 +101,15 @@ const LoginPage = () => {
       style={{
         display: "flex",
         justifyContent: "center",
-        // alignItems: "center",
-        // height: "100vh",
         marginBottom: "5%",
       }}
     >
-      <form onSubmit={handleRigister}>
+      <form onSubmit={handleRegister}>
         <Box
           id="signup-box"
           sx={{
             width: "30em",
-            height: "37em",
+            height: "43em",
             border: "2px solid #aaa",
             borderRadius: "8px",
             display: "flex",
@@ -119,6 +137,8 @@ const LoginPage = () => {
             label="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={!!emailError}
+            helperText={emailError}
             disabled={isSubmitting}
             required
             sx={{
@@ -130,8 +150,11 @@ const LoginPage = () => {
             label="Contact Number"
             value={contact}
             onChange={(e) => setContact(e.target.value)}
+            error={!!contactError}
+            helperText={contactError}
             disabled={isSubmitting}
             required
+            inputProps={{ inputMode: "numeric" }}
             sx={{
               width: "100%",
               margin: "1em",
@@ -142,6 +165,20 @@ const LoginPage = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={isSubmitting}
+            required
+            sx={{
+              width: "100%",
+              margin: "1em",
+            }}
+          />
+          <TextField
+            label="Confirm Password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            error={!!confirmPasswordError}
+            helperText={confirmPasswordError}
             disabled={isSubmitting}
             required
             sx={{
@@ -173,12 +210,12 @@ const LoginPage = () => {
           >
             Cancel
           </Button>
-          <spam
+          <span
             onClick={(e) => router.push("/login")}
             style={{ cursor: "pointer", textDecoration: "underline" }}
           >
             Have an account? Click here to login!
-          </spam>
+          </span>
         </Box>
 
         <SuccessfulModal
@@ -190,4 +227,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default SignupPage;

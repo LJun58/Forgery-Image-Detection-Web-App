@@ -11,6 +11,7 @@ import {
   TableRow,
   Paper,
   Grid,
+  Alert,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
@@ -18,10 +19,14 @@ import FullImageModal from "@/components/modal/fullImageModal";
 import { deleteDoc, doc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { useRouter } from "next/router";
+import Snackbar from "@mui/material/Snackbar";
 
 const History = ({ historyData }) => {
   const [fullImageOpen, setFullImageOpen] = useState(null);
   const router = useRouter();
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   const handleFullImageOpen = (index) => {
     setFullImageOpen(index);
@@ -29,6 +34,13 @@ const History = ({ historyData }) => {
 
   const handleModalClose = () => {
     setFullImageOpen(null);
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
   };
 
   const deleteImage = async (id, imageUrl, storage) => {
@@ -41,21 +53,24 @@ const History = ({ historyData }) => {
         return; // Exit if user cancels
       }
 
-      // Delete from Firestore
+      // Delete from Firestore using the document ID
       await deleteDoc(doc(db, "userImages", id));
 
       // Delete from Cloud Storage (assuming the URL points to Cloud Storage)
       const imageRef = ref(storage, imageUrl);
       await deleteObject(imageRef);
 
+      setOpenSnackbar(true);
+      setSnackbarSeverity("success");
+      setSnackbarMessage("Image deleted successfully!");
+
       console.log("Image deleted successfully!");
       router.push(router.asPath);
     } catch (error) {
+      setOpenSnackbar(true);
+      setSnackbarSeverity("error");
+      setSnackbarMessage("Error deleting image:", error);
       console.error("Error deleting image:", error);
-      // Display an error message to the user
-      alert(
-        "An error occurred while deleting the image. Please try again later."
-      );
     }
   };
 
@@ -127,6 +142,13 @@ const History = ({ historyData }) => {
               onClose={handleModalClose}
             />
           )}
+          <Snackbar
+            open={openSnackbar}
+            autoHideDuration={6000} // Optional: Hide automatically after 6 seconds
+            onClose={handleSnackbarClose}
+          >
+            <Alert severity={snackbarSeverity}>{snackbarMessage}</Alert>
+          </Snackbar>
         </>
       ) : (
         <p>No history found.</p>

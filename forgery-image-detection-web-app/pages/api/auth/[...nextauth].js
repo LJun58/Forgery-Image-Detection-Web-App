@@ -56,11 +56,11 @@ export default NextAuth({
         session.user.email = token.email;
         session.user.id = token.sub;
         session.user.accessToken = token.accessToken;
+        session.user.username = token.username;
       }
       return session;
     },
     async jwt({ token, user, account, profile }) {
-      // Generate an access token using JWT
       if (user) {
         const accessToken = jwt.sign(
           { userId: user.id },

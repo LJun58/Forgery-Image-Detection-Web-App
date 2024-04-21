@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 import ResponsiveAppBar from "@/components/nav";
 import { SessionProvider } from "next-auth/react";
 import { createTheme, ThemeProvider } from "@mui/material";
+import Footer from "@/components/footer";
 
 export const theme = createTheme({
   components: {
@@ -102,6 +103,7 @@ export default function App({ Component, pageProps }) {
         <SessionProvider session={pageProps.session}>
           <ResponsiveAppBar />
           <Component {...pageProps} />
+          <Footer />
         </SessionProvider>
       </ThemeProvider>
     </div>

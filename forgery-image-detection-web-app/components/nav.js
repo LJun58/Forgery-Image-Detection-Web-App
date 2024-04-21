@@ -14,9 +14,41 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
 
 const pages = ["Home", "Tutorial", "About Us"];
 const settings = ["Profile", "Account", "History", "Logout"];
+
+function stringToColor(string) {
+  let hash = 0;
+  let i;
+
+  for (i = 0; i < string.length; i += 1) {
+    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  let color = "#";
+
+  for (i = 0; i < 3; i += 1) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += `00${value.toString(16)}`.slice(-2);
+  }
+
+  return color;
+}
+
+function stringAvatar(name) {
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("");
+  return {
+    sx: {
+      bgcolor: stringToColor(name),
+    },
+    children: initials,
+  };
+}
 
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -65,6 +97,11 @@ function ResponsiveAppBar() {
     handleCloseNavMenu();
   };
 
+  const handleRegisterClick = () => {
+    router.push("/signup");
+    handleCloseNavMenu();
+  };
+
   const handleLogoutClick = async (e) => {
     const result = await signOut({ redirect: false, callbackUrl: "/" });
     if (!result.error) {
@@ -109,14 +146,6 @@ function ResponsiveAppBar() {
                 display: { xs: "block", md: "none" },
               }}
             >
-              {/* {pages.map((page) => (
-                <MenuItem
-                  key={page}
-                  onClick={handleCloseNavMenu}
-                >
-                  <Typography textAlign="center">{page}</Typography>
-                </MenuItem>
-              ))} */}
               <Button
                 onClick={handleHomeClick} // Use the function to navigate
                 sx={{ my: 2, color: "black", display: "block" }}
@@ -138,11 +167,17 @@ function ResponsiveAppBar() {
             </Menu>
           </Box>
           {/* <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} /> */}
-          <img
-            src="/logo.png"
-            alt="logo"
-            style={{ width: "18rem", height: "3.85rem", marginRight: "8px" }}
-          />
+          <Link href="/">
+            <img
+              src="/logo.png"
+              alt="logo"
+              style={{
+                width: "18rem",
+                height: "3.85rem",
+                marginRight: "8px",
+              }}
+            />
+          </Link>
           <Typography
             variant="h5"
             noWrap
@@ -220,14 +255,6 @@ function ResponsiveAppBar() {
             >
               {session ? (
                 <>
-                  {/* {settings.map((setting) => (
-                <MenuItem
-                  key={setting}
-                  onClick={handleCloseUserMenu}
-                >
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))} */}
                   <Button
                     onClick={handleProfileClick}
                     sx={{ my: 2, color: "black", display: "block" }}
@@ -248,17 +275,24 @@ function ResponsiveAppBar() {
                   </Button>
                 </>
               ) : (
-                <Button
-                  onClick={handleLoginClick}
-                  sx={{ my: 2, color: "black", display: "block" }}
-                >
-                  Login
-                </Button>
+                <div>
+                  <Button
+                    onClick={handleLoginClick}
+                    sx={{ my: 2, color: "black", display: "block" }}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    onClick={handleRegisterClick}
+                    sx={{ my: 2, color: "black", display: "block" }}
+                  >
+                    Register
+                  </Button>
+                </div>
               )}
             </Menu>
             {session && session.user && (
               <>
-                {/* Your code that accesses session.user.email */}
                 <Typography
                   variant="body1"
                   component="div"
