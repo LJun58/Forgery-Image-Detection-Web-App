@@ -40,6 +40,11 @@ export function ResultModal({ open, onClose, results }) {
       onClose={() => onClose()}
       closeAfterTransition
       keepMounted
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
       <Fade
         in={open}
@@ -48,6 +53,8 @@ export function ResultModal({ open, onClose, results }) {
         <Box
           sx={{
             ...theme.components.ModalBox.styleOverrides.root,
+            maxHeight: "80%",
+            overflowY: "auto",
           }}
           textAlign="center"
         >
@@ -67,24 +74,24 @@ export function ResultModal({ open, onClose, results }) {
                   display: "flex",
                   alignItems: "center",
                   marginBottom: "20px",
+                  flexDirection: "row", // Display image and text side by side
                 }}
               >
                 <Button
                   onClick={() => handleFullImageOpen(index)}
                   style={{
-                    width: hoveredImage === index ? "150px" : "100px",
-                    marginRight: "20px",
-                    transition: "width 0.3s ease",
-                    cursor: "pointer", // Indicate clickability
+                    width: "150px",
+                    height: "150px",
+                    marginRight: "20px", // Add margin to separate image and text
+                    cursor: "pointer",
                   }}
                 >
                   <img
                     src={result.url}
                     alt={`Image ${index + 1}`}
                     style={{
-                      width: hoveredImage === index ? "150px" : "100px",
-                      marginRight: "20px",
-                      transition: "width 0.3s ease",
+                      width: "auto",
+                      height: "100%",
                       cursor: "pointer",
                     }}
                     onMouseEnter={() => handleImageHover(index)}
@@ -103,6 +110,7 @@ export function ResultModal({ open, onClose, results }) {
               No images uploaded for detection.
             </Typography>
           )}
+
           {fullImageOpen !== null && (
             <FullImageModal
               open={true}

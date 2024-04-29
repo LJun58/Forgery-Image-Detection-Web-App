@@ -169,10 +169,10 @@ export default function DragDropImageUploader() {
         setResults(resultsData);
         setOpen(true);
       } else {
-        console.error("Failed to detect forgery");
+        alert("Failed to detect forgery");
       }
     } catch (error) {
-      console.error("Error detecting forgery:", error);
+      alert("Error detecting forgery:", error);
     }
   };
 

@@ -22,7 +22,14 @@ const FullImageModal = ({ open, imageUrl, onClose }) => (
       in={open}
       unmountOnExit
     >
-      <Box sx={{ position: "relative", width: "80%" }}>
+      <Box
+        sx={{
+          maxWidth: "90vw", // Set maximum width to 90% of viewport width
+          maxHeight: "90vh", // Set maximum height to 90% of viewport height
+          overflowY: "auto", // Enable vertical scrolling if necessary
+          position: "relative",
+        }}
+      >
         <img
           src={imageUrl}
           alt="Full Image"

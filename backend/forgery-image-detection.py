@@ -36,7 +36,7 @@ def load_model(model_path):
 model = load_model(MODEL_PATH)
 
 # Function to authenticate image using the fine-tuned model
-def authenticate_image(image_path, model, threshold=0.8):
+def authenticate_image(image_path, model, threshold=0.71):
     features = preprocess_image(image_path)
     input_tensor = torch.tensor(features, dtype=torch.float32)
     input_tensor = input_tensor.unsqueeze(0).repeat(1, 3, 1, 1).to(device)  # Replicate single channel into three channels
@@ -44,7 +44,7 @@ def authenticate_image(image_path, model, threshold=0.8):
         output = model(input_tensor)
     # Check if probability for the forged class exceeds the threshold
     forged_prob = torch.softmax(output, dim=1)[0][1].item()  # Probability for forged class
-    if forged_prob > threshold:
+    if forged_prob < threshold:
         return 1  # Forgery detected
     else:
         return 0  # No forgery detected

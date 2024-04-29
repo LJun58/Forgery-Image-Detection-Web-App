@@ -12,12 +12,12 @@ const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // New state for confirmation password
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isShowSuccessfulModal, setIsShowSuccessfulModal] = useState(false);
   const [contactError, setContactError] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState(""); // New state for confirmation password error
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
   const { data: session } = useSession(); // Get session status
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { db, storage } from "@/firebase"; // Assuming your firebase config is in "@/firebase"
+import { db, storage } from "@/firebase";
 import { getSession } from "next-auth/react";
 import {
   Table,
@@ -107,7 +107,11 @@ const History = ({ historyData }) => {
                           <img
                             src={item.imageURL}
                             alt={item.imageName}
-                            style={{ maxWidth: 300, cursor: "pointer" }}
+                            style={{
+                              maxWidth: 300,
+                              maxHeight: 200,
+                              cursor: "pointer",
+                            }}
                             onClick={() => handleFullImageOpen(index)}
                           />
                         </Grid>
@@ -119,7 +123,9 @@ const History = ({ historyData }) => {
                         createdAt.toLocaleTimeString()}
                     </TableCell>
                     <TableCell>
-                      {item.result === 0 ? "Authentic" : "Forged."}
+                      <span style={{ color: item.result === 0 ? "" : "red" }}>
+                        {item.result === 0 ? "Authentic" : "Forged"}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <IconButton
