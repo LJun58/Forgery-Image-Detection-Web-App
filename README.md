@@ -1,5 +1,4 @@
 # Forgery-Image-Detection-Web-App
-## Project Description
 This is my Final Year Project, a forgery image detection web app. The users can upload their images to check the images' authenticity. 
 The logic used for the backend in the project combines the Discrete Cosine Transform (DCT) and pre-trained CNN model (ResNet-50).
 The NextJS framework is used in this project for the front-end development.
